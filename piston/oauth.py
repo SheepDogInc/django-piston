@@ -228,7 +228,7 @@ class OAuthRequest(object):
             pass
         # Escape key values before sorting.
         key_values = [(escape(_utf8_str(k)), escape(_utf8_str(v))) \
-            for k,v in params.items()]
+            for k,v in params.items() if v != '']
         # Sort lexicographically, first after key, then after value.
         key_values.sort()
         # Combine key value pairs into a string.
