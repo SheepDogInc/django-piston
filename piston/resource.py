@@ -1,20 +1,19 @@
-import sys, inspect
+import sys
 
 from django.http import (HttpResponse, Http404, HttpResponseNotAllowed,
-    HttpResponseForbidden, HttpResponseServerError)
+    HttpResponseServerError)
 from django.views.debug import ExceptionReporter
 from django.views.decorators.vary import vary_on_headers
 from django.conf import settings
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.db.models.query import QuerySet
-from django.http import Http404
 
-from emitters import Emitter
-from handler import typemapper
-from doc import HandlerMethod
-from authentication import NoAuthentication
-from utils import coerce_put_post, FormValidationError, HttpStatusCode
-from utils import rc, format_error, translate_mime, MimerDataException
+from piston.emitters import Emitter
+from piston.handler import typemapper
+from piston.doc import HandlerMethod
+from piston.authentication import NoAuthentication
+from piston.utils import coerce_put_post, FormValidationError, HttpStatusCode
+from piston.utils import rc, format_error, translate_mime, MimerDataException
 
 CHALLENGE = object()
 
@@ -50,7 +49,7 @@ class Resource(object):
 
     def determine_emitter(self, request, *args, **kwargs):
         """
-        Function for determening which emitter to use
+        Function for determining which emitter to use
         for output. It lives here so you can easily subclass
         `Resource` in order to change how emission is detected.
 
@@ -197,8 +196,10 @@ class Resource(object):
             before sending it to the client. Won't matter for
             smaller datasets, but larger will have an impact.
             """
-            if self.stream: stream = srl.stream_render(request)
-            else: stream = srl.render(request)
+            if self.stream:
+                stream = srl.stream_render(request)
+            else:
+                stream = srl.render(request)
 
             if not isinstance(stream, HttpResponse):
                 resp = HttpResponse(stream, mimetype=ct, status=status_code)
@@ -250,6 +251,9 @@ class Resource(object):
         Override this method to add handling of errors customized for your 
         needs
         """
+        if settings.DEBUG:
+            raise
+
         if isinstance(e, FormValidationError):
             return self.form_validation_response(e)
 

@@ -1,7 +1,6 @@
 from __future__ import generators
 
 import decimal, re, inspect
-import copy
 
 try:
     # yaml isn't standard with python.  It shouldn't be required if it
@@ -25,13 +24,14 @@ from django.db.models import Model, permalink
 from django.utils import simplejson
 from django.utils.xmlutils import SimplerXMLGenerator
 from django.utils.encoding import smart_unicode
-from django.core.urlresolvers import reverse, NoReverseMatch
+from django.core.urlresolvers import NoReverseMatch
 from django.core.serializers.json import DateTimeAwareJSONEncoder
 from django.http import HttpResponse
 from django.core import serializers
+from django.conf import settings
 
-from utils import HttpStatusCode, Mimer
-from validate_jsonp import is_valid_jsonp_callback_value
+from piston.utils import HttpStatusCode, Mimer
+from piston.validate_jsonp import is_valid_jsonp_callback_value
 
 try:
     import cStringIO as StringIO
@@ -153,6 +153,7 @@ class Emitter(object):
             ret = { }
             handler = self.in_typemapper(type(data), self.anonymous)
             get_absolute_uri = False
+            ignore_none = getattr(settings, 'PISTON_IGNORE_NONE_FIELDS', False)
 
             if handler or fields:
                 v = lambda f: getattr(data, f.attname)
@@ -175,7 +176,7 @@ class Emitter(object):
                     if not get_fields:
                         get_fields = set([ f.attname.replace("_id", "", 1)
                             for f in data._meta.fields + data._meta.virtual_fields])
-                    
+
                     if hasattr(mapped, 'extra_fields'):
                         get_fields.update(mapped.extra_fields)
 
@@ -198,7 +199,9 @@ class Emitter(object):
                     if f.serialize and not any([ p in met_fields for p in [ f.attname, f.name ]]):
                         if not f.rel:
                             if f.attname in get_fields:
-                                ret[f.attname] = _any(v(f))
+                                temp = _any(v(f))
+                                if not (ignore_none and temp is None):
+                                    ret[f.attname] = temp
                                 get_fields.remove(f.attname)
                         else:
                             if f.attname[:-3] in get_fields:
@@ -224,7 +227,7 @@ class Emitter(object):
                                 if len(inspect.getargspec(inst)[0]) == 1:
                                     ret[model] = _any(inst(), fields)
                             else:
-                                ret[model] = _model(inst, fields)
+                                ret[model] = _any(inst, fields)
 
                     elif maybe_field in met_fields:
                         # Overriding normal field which has a "resource method"
@@ -268,13 +271,17 @@ class Emitter(object):
                         pass
 
             if hasattr(data, 'get_api_url') and 'resource_uri' not in ret:
-                try: ret['resource_uri'] = data.get_api_url()
-                except: pass
+                try:
+                    ret['resource_uri'] = data.get_api_url()
+                except:
+                    pass
 
             # absolute uri
             if hasattr(data, 'get_absolute_url') and get_absolute_uri:
-                try: ret['absolute_uri'] = data.get_absolute_url()
-                except: pass
+                try:
+                    ret['absolute_uri'] = data.get_absolute_url()
+                except:
+                    pass
 
             return ret
 

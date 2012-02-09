@@ -1,6 +1,5 @@
 import time
-from django.http import HttpResponseNotAllowed, HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
-from django.core.urlresolvers import reverse
+from django.http import HttpResponse
 from django.core.cache import cache
 from django import get_version as django_version
 from django.core.mail import send_mail, mail_admins
@@ -8,9 +7,7 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.template import loader, TemplateDoesNotExist
 from django.contrib.sites.models import Site
-from decorator import decorator
-
-from datetime import datetime, timedelta
+from piston.decorator import decorator
 
 __version__ = '0.2.3rc1'
 
@@ -69,7 +66,7 @@ class rc_factory(object):
                     self._container = [content]
                     self._is_string = True
 
-            content = property(HttpResponse._get_content, _set_content)            
+            content = property(HttpResponse._get_content, _set_content)
 
         return HttpResponseWrapper(r, content_type='text/plain', status=c)
     

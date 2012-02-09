@@ -4,11 +4,10 @@ import urllib, time, urlparse
 from django.db.models.signals import post_save, post_delete
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.mail import send_mail, mail_admins
 
 # Piston imports
-from managers import TokenManager, ConsumerManager, ResourceManager
-from signals import consumer_post_save, consumer_post_delete
+from piston.managers import TokenManager, ConsumerManager
+from piston.signals import consumer_post_save, consumer_post_delete
 
 KEY_SIZE = 18
 SECRET_SIZE = 32
@@ -95,7 +94,7 @@ class Token(models.Model):
 
     def to_string(self, only_key=False):
         token_dict = {
-            'oauth_token': self.key, 
+            'oauth_token': self.key,
             'oauth_token_secret': self.secret,
             'oauth_callback_confirmed': 'true',
         }
@@ -122,6 +121,7 @@ class Token(models.Model):
     # -- OAuth 1.0a stuff
 
     def get_callback_url(self):
+        # TODO: refactor this with OAuthToken.get_callback_url()
         if self.callback and self.verifier:
             # Append the oauth_verifier.
             parts = urlparse.urlparse(self.callback)

@@ -1,7 +1,7 @@
 import oauth
 
-from models import Nonce, Token, Consumer
-from models import generate_random, VERIFIER_SIZE
+from piston.models import Nonce, Token, Consumer
+from piston.models import generate_random, VERIFIER_SIZE
 
 class DataStore(oauth.OAuthDataStore):
     """Layer between Python OAuth and Django database."""
@@ -25,7 +25,7 @@ class DataStore(oauth.OAuthDataStore):
         elif token_type == 'access':
             token_type = Token.ACCESS
         try:
-            self.request_token = Token.objects.get(key=token, 
+            self.request_token = Token.objects.get(key=token,
                                                    token_type=token_type)
             return self.request_token
         except Token.DoesNotExist:
@@ -34,7 +34,7 @@ class DataStore(oauth.OAuthDataStore):
     def lookup_nonce(self, oauth_consumer, oauth_token, nonce):
         if oauth_token is None:
             return None
-        nonce, created = Nonce.objects.get_or_create(consumer_key=oauth_consumer.key, 
+        nonce, created = Nonce.objects.get_or_create(consumer_key=oauth_consumer.key,
                                                      token_key=oauth_token.key,
                                                      key=nonce)
         if created:

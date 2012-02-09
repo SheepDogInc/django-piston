@@ -1,5 +1,6 @@
-import inspect, handler
+import inspect
 
+from piston import handler
 from piston.handler import typemapper
 from piston.handler import handler_tracker
 
@@ -180,16 +181,16 @@ def documentation_view(request):
     """
     docs = [ ]
 
-    for handler in handler_tracker: 
+    for handler in handler_tracker:
         docs.append(generate_doc(handler))
 
-    def _compare(doc1, doc2): 
-       #handlers and their anonymous counterparts are put next to each other.
-       name1 = doc1.name.replace("Anonymous", "")
-       name2 = doc2.name.replace("Anonymous", "")
-       return cmp(name1, name2)    
+    def _compare(doc1, doc2):
+        #handlers and their anonymous counterparts are put next to each other.
+        name1 = doc1.name.replace("Anonymous", "")
+        name2 = doc2.name.replace("Anonymous", "")
+        return cmp(name1, name2)
  
     docs.sort(_compare)
        
-    return render_to_response('documentation.html', 
+    return render_to_response('documentation.html',
         { 'docs': docs }, RequestContext(request))
