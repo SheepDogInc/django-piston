@@ -14,6 +14,7 @@ class HandlerMetaClass(type):
     """
     def __new__(cls, name, bases, attrs):
         new_cls = type.__new__(cls, name, bases, attrs)
+        if not getattr(new_cls,'register',True): return new_cls
 
         def already_registered(model, anon):
             for k, (m, a) in typemapper.iteritems():
@@ -21,10 +22,10 @@ class HandlerMetaClass(type):
                     return k
 
         if hasattr(new_cls, 'model'):
-            if already_registered(new_cls.model, new_cls.is_anonymous):
+            handler = already_registered(new_cls.model, new_cls.is_anonymous)
+            if handler:
                 if not getattr(settings, 'PISTON_IGNORE_DUPE_MODELS', False):
-                    warnings.warn("Handler already registered for model %s, "
-                        "you may experience inconsistent results." % new_cls.model.__name__)
+                    warnings.warn("Registering handler %s. Handler %s already registered for model %s, you may experience inconsistent results." % (name, handler.__name__, new_cls.model.__name__))
 
             typemapper[new_cls] = (new_cls.model, new_cls.is_anonymous)
         else:
@@ -51,6 +52,9 @@ class BaseHandler(object):
     anonymous = is_anonymous = False
     exclude = ( 'id', )
     fields =  ( )
+
+    def __init__(self):
+        self.pkfield = getattr(self,'pkfield',self.model._meta.pk.name)
 
     def flatten_dict(self, dct):
         return dict([ (str(k), dct.get(k)) for k in dct.keys() ])
@@ -81,7 +85,7 @@ class BaseHandler(object):
         if not self.has_model():
             return rc.NOT_IMPLEMENTED
 
-        pkfield = self.model._meta.pk.name
+        pkfield = self.pkfield
 
         if pkfield in kwargs:
             try:
@@ -100,7 +104,7 @@ class BaseHandler(object):
         attrs = self.flatten_dict(request.data)
 
         try:
-            inst = self.queryset(request).get(**attrs)
+            inst = self.queryset(request).get(pk=kwargs.get(self.pkfield))
             return rc.DUPLICATE_ENTRY
         except self.model.DoesNotExist:
             inst = self.model(**attrs)
@@ -113,14 +117,12 @@ class BaseHandler(object):
         if not self.has_model():
             return rc.NOT_IMPLEMENTED
 
-        pkfield = self.model._meta.pk.name
-
-        if pkfield not in kwargs:
+        if self.pkfield not in kwargs:
             # No pk was specified
             return rc.BAD_REQUEST
 
         try:
-            inst = self.queryset(request).get(pk=kwargs.get(pkfield))
+            inst = self.queryset(request).get(pk=kwargs.get(self.pkfield))
         except ObjectDoesNotExist:
             return rc.NOT_FOUND
         except MultipleObjectsReturned: # should never happen, since we're using a PK
@@ -137,8 +139,12 @@ class BaseHandler(object):
         if not self.has_model():
             raise NotImplementedError
 
+        if self.pkfield not in kwargs:
+            # No pk was specified
+            return rc.BAD_REQUEST
+
         try:
-            inst = self.queryset(request).get(*args, **kwargs)
+            inst = self.queryset(request).get(pk=kwargs.get(self.pkfield))
 
             inst.delete()
 

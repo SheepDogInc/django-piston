@@ -47,10 +47,10 @@ class DataStore(oauth.OAuthDataStore):
             self.request_token = Token.objects.create_token(consumer=self.consumer,
                                                             token_type=Token.REQUEST,
                                                             timestamp=self.timestamp)
-            
+
             if oauth_callback:
                 self.request_token.set_callback(oauth_callback)
-            
+
             return self.request_token
         return None
 

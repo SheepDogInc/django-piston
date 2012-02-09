@@ -63,12 +63,13 @@ class Emitter(object):
                             'delete', 'model', 'anonymous',
                             'allowed_methods', 'fields', 'exclude' ])
 
-    def __init__(self, payload, typemapper, handler, fields=(), anonymous=True):
+    def __init__(self, payload, typemapper, handler, fields=(), anonymous=True, total=None):
         self.typemapper = typemapper
         self.data = payload
         self.handler = handler
         self.fields = fields
         self.anonymous = anonymous
+        self.total = total
 
         if isinstance(self.data, Exception):
             raise
@@ -158,10 +159,7 @@ class Emitter(object):
             if handler or fields:
                 v = lambda f: getattr(data, f.attname)
 
-                if handler:
-                    fields = getattr(handler, 'fields')    
-                
-                if not fields or hasattr(handler, 'fields'):
+                if not fields:
                     """
                     Fields was not specified, try to find teh correct
                     version in the typemapper we were sent.
@@ -250,6 +248,7 @@ class Emitter(object):
                                 ret[maybe_field] = _any(handler_f(data))
 
             else:
+                #neither handler nor fields were given
                 for f in data._meta.fields:
                     ret[f.attname] = _any(getattr(data, f.attname))
 

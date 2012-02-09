@@ -1,12 +1,14 @@
-import sys
+import sys, inspect, re
 
 from django.http import (HttpResponse, Http404, HttpResponseNotAllowed,
     HttpResponseServerError)
 from django.views.debug import ExceptionReporter
 from django.views.decorators.vary import vary_on_headers
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail, EmailMessage
+from django.db import transaction
 from django.db.models.query import QuerySet
+from django.http import Http404
 
 from piston.emitters import Emitter
 from piston.handler import typemapper
@@ -28,11 +30,16 @@ class Resource(object):
     callmap = { 'GET': 'read', 'POST': 'create',
                 'PUT': 'update', 'DELETE': 'delete' }
 
+    range_re = re.compile("^items=(\d*)-(\d*)$")
+
+    mimer = Mimer
+
     def __init__(self, handler, authentication=None):
         if not callable(handler):
-            raise AttributeError, "Handler not callable."
+            self.handler = handler
+        else:
+            self.handler = handler()
 
-        self.handler = handler()
         self.csrf_exempt = getattr(self.handler, 'csrf_exempt', True)
 
         if not authentication:
@@ -46,6 +53,26 @@ class Resource(object):
         self.email_errors = getattr(settings, 'PISTON_EMAIL_ERRORS', True)
         self.display_errors = getattr(settings, 'PISTON_DISPLAY_ERRORS', True)
         self.stream = getattr(settings, 'PISTON_STREAM_OUTPUT', False)
+
+        # Paging
+        paging_params = getattr(settings, 'PISTON_PAGINATION_PARAMS', ('offset', 'limit'))
+        self.paging_offset = paging_params[0]
+        self.paging_limit = paging_params[1]
+
+	def noop(func):
+		def inner_noop(*args, **kwargs):
+			return func(*args, **kwargs)
+		return inner_noop
+
+	self.trans_func = noop
+
+	#TODO allow this to be changed per resource/handler - interpret strings as trans_func
+	#if hasattr(settings, 'EXTPISTON_TRANSACTION_ISOLATION'):
+	fname = getattr(settings, 'EXTPISTON_TRANSACTION_ISOLATION', 'commit_on_success')
+	if hasattr(transaction, fname):
+		self.trans_func = getattr(transaction, fname)
+	else:
+		print "Invalid EXTPISTON_TRANSACTION_ISOLATION value:", fname
 
     def determine_emitter(self, request, *args, **kwargs):
         """
@@ -66,7 +93,7 @@ class Resource(object):
 
     def form_validation_response(self, e):
         """
-        Method to return form validation error information. 
+        Method to return form validation error information.
         You will probably want to override this in your own
         `Resource` subclass.
         """
@@ -110,6 +137,9 @@ class Resource(object):
 
         return actor, anonymous
 
+    def translate_mime(self, request):
+        self.mimer(request).translate()
+
     @vary_on_headers('Authorization')
     def __call__(self, request, *args, **kwargs):
         """
@@ -133,7 +163,7 @@ class Resource(object):
         # Translate nested datastructs into `request.data` here.
         if rm in ('POST', 'PUT'):
             try:
-                translate_mime(request)
+                self.translate_mime(request)
             except MimerDataException:
                 return rc.BAD_REQUEST
             if not hasattr(request, 'data'):
@@ -160,7 +190,8 @@ class Resource(object):
         request = self.cleanup_request(request)
 
         try:
-            result = meth(request, *args, **kwargs)
+            #result = transaction.commit_on_success(meth)(request, *args, **kwargs)
+            result = self.trans_func(meth)(request, *args, **kwargs)
         except Exception, e:
             result = self.error_handler(e, request, meth, em_format)
 
@@ -178,16 +209,145 @@ class Resource(object):
         status_code = 200
 
         # If we're looking at a response object which contains non-string
-        # content, then assume we should use the emitter to format that 
+        # content, then assume we should use the emitter to format that
         # content
         if isinstance(result, HttpResponse) and not result._is_string:
             status_code = result.status_code
             # Note: We can't use result.content here because that method attempts
-            # to convert the content into a string which we don't want. 
+            # to convert the content into a string which we don't want.
             # when _is_string is False _container is the raw data
             result = result._container
-     
-        srl = emitter(result, typemapper, handler, fields, anonymous)
+
+        # Paging
+        content_range = None
+        total=None
+
+        if isinstance(result, QuerySet):
+            """
+            Limit results based on requested items. This is a based on
+            HTTP 1.1 Partial GET, RFC 2616 sec 14.35, but is intended to
+            operate on the record level rather than the byte level.  We
+            will still respond with code 206 and a range header.
+            """
+
+            request_range = None
+
+            if 'HTTP_RANGE' in request.META:
+                """
+                Parse the reange request header. HTTP proper expects Range,
+                but since we are deviating from the bytes nature, we will use
+                a non-standard syntax. This is expected to be of the format:
+
+                    "items" "=" start "-" end
+
+                E.g.,
+
+                    Range: items=7-45
+
+                """
+                h = request.META['HTTP_RANGE'].strip()
+                if h.startswith('items='):
+                    m = self.range_re.match(h)
+                    if m:
+                        s, e = None, None
+                        if m.group(1) != '': s = int(m.group(1))
+                        if m.group(2) != '': e = int(m.group(2))
+                        request_range = (s, e)
+                    else:
+                        resp = rc.BAD_REQUEST
+                        resp.write(' malformed range header')
+                        return resp
+
+            elif self.paging_offset in request.GET and self.paging_limit in request.GET:
+                """
+                Alternatively, parse the query string for paging parameters. Here,
+                we ask for an offset and a limit, so we need to convert this to a
+                fixed start and end to accomodate the slicing. Both parameters must
+                be specified, but either may be left empty, exclusively, to produce
+                the following behaviors:
+
+                    * ?offset=n&limit= -> tail of list, beginning at item n
+                    * ?offset=&limit=n -> trailing n items of list
+
+                """
+                try: offset = int(request.GET[self.paging_offset])
+                except (ValueError, TypeError): offset = None
+
+                try: limit = int(request.GET[self.paging_limit])
+                except (ValueError, TypeError): limit = None
+
+                if offset != None and limit != None: request_range = (offset, offset + limit - 1)
+                elif offset != None: request_range = (offset, None)
+                elif limit != None: request_range = (None, limit)
+
+            if request_range:
+                def get_range(start, end, total):
+                    """
+                    Normalizes the range for queryset slicing and response
+                    header generation.  Checks that constraints defined
+                    by the RFC hold, or raises exceptions.
+                    """
+
+                    if start != None and start < 0: raise BadRangeException('negative ranges not allowed')
+                    if end != None and end < 0: raise BadRangeException('negative ranges not allowed')
+
+                    range_start = start
+                    range_end = end
+                    last = total - 1
+
+                    if range_start != None and range_end != None:
+                        """
+                        Basic, well-formed range.  Make sure that requested range is
+                        between 0 and last inclusive, and that start <= end.
+                        """
+                        if range_start > last: raise BadRangeException("start gt last")
+                        if range_start > range_end: raise BadRangeException("start lt end")
+                        if range_end > last: range_end = last;
+
+                    elif range_start != None:
+                        """
+                        Requsting range_start through last.  Make sure range_start is
+                        valid and set range_end to last.
+                        """
+                        if range_start > last: raise BadRangeException("start gt last")
+                        range_end = last
+
+                    elif range_end != None:
+                        """
+                        Requesting range_end items from the tail of the result set.
+                        If range_end > last, the entire resultset is returned.  otherwise
+                        range_start must be last - range_end.
+                        """
+                        if range_end > last:
+                            range_start = 0
+                            range_end = last
+                        else:
+                            range_start = last - range_end + 1
+                            range_end = last
+
+                    else:
+                        raise BadRangeException("no start or end")
+
+                    assert range_start != None
+                    assert range_end != None
+                    return (range_start, range_end)
+
+
+                try:
+                    total = result.count()
+		    if total == 0 and request_range[0] == 0:
+                        result =  []	#workaround - if query returned no data and paging starts with 0, it usually means it's just an init value - return empty dataset instead of an error
+                    else:
+                        start, end = get_range(request_range[0], request_range[1], total)
+                        result = result[start:end + 1]
+                        content_range = "items %i-%i/%i" % (start, end, total)
+                except BadRangeException, e:
+                    resp = rc.BAD_RANGE
+                    resp.write("\n%s" % e.value)
+                    return resp
+        #end paging
+
+        srl = emitter(result, typemapper, handler, fields, anonymous, total)
 
         try:
             """
@@ -207,6 +367,10 @@ class Resource(object):
                 resp = stream
 
             resp.streaming = self.stream
+
+            if content_range:
+                resp.status_code = 206
+                resp['Content-Range'] = content_range
 
             return resp
         except HttpStatusCode, e:
@@ -248,7 +412,7 @@ class Resource(object):
 
     def error_handler(self, e, request, meth, em_format):
         """
-        Override this method to add handling of errors customized for your 
+        Override this method to add handling of errors customized for your
         needs
         """
         if settings.DEBUG:
@@ -279,8 +443,8 @@ class Resource(object):
 
         elif isinstance(e, HttpStatusCode):
             return e.response
- 
-        else: 
+
+        else:
             """
             On errors (like code errors), we'd like to be able to
             give crash reports to both admins and also the calling

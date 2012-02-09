@@ -29,7 +29,7 @@ class MainTests(TestCase):
 
         if hasattr(self, 'init_delegate'):
             self.init_delegate()
-        
+
     def tearDown(self):
         self.user.delete()
 
@@ -90,7 +90,7 @@ class OAuthTests(MainTests):
         self.assertEqual(302, response.status_code)
         self.failUnless(response['Location'].startswith("http://printer.example.com/request_token_ready?"))
         self.failUnless(('oauth_token='+oatoken.key in response['Location']))
-        
+
         # Actually we can't test this last part, since it's 1.0a.
         # Obtain access token...
 #        request = oauth.OAuthRequest.from_consumer_and_token(oaconsumer, token=oatoken,
@@ -128,7 +128,7 @@ class BasicAuthTest(MainTests):
 
 class TestMultipleAuthenticators(MainTests):
     def test_both_authenticators(self):
-        for username, password in (('admin', 'admin'), 
+        for username, password in (('admin', 'admin'),
                                    ('admin', 'secr3t'),
                                    ('admin', 'user'),
                                    ('admin', 'allwork'),
@@ -166,40 +166,40 @@ class AbstractBaseClassTests(MainTests):
         self.ab1.save()
         self.ab2 = InheritedModel()
         self.ab2.save()
-        
+
     def test_field_presence(self):
         result = self.client.get('/api/abstract.json',
                 HTTP_AUTHORIZATION=self.auth_string).content
-                
+
         expected = """[
     {
-        "id": 1, 
-        "some_other": "something else", 
+        "id": 1,
+        "some_other": "something else",
         "some_field": "something here"
-    }, 
+    },
     {
-        "id": 2, 
-        "some_other": "something else", 
+        "id": 2,
+        "some_other": "something else",
         "some_field": "something here"
     }
 ]"""
-        
+
         self.assertEquals(result, expected)
 
     def test_specific_id(self):
         ids = (1, 2)
         be = """{
-    "id": %d, 
-    "some_other": "something else", 
+    "id": %d,
+    "some_other": "something else",
     "some_field": "something here"
 }"""
-        
+
         for id_ in ids:
             result = self.client.get('/api/abstract/%d.json' % id_,
                     HTTP_AUTHORIZATION=self.auth_string).content
-                    
+
             expected = be % id_
-            
+
             self.assertEquals(result, expected)
 
 class IncomingExpressiveTests(MainTests):
@@ -213,58 +213,58 @@ class IncomingExpressiveTests(MainTests):
         outgoing = simplejson.dumps({ 'title': 'test', 'content': 'test',
                                       'comments': [ { 'content': 'test1' },
                                                     { 'content': 'test2' } ] })
-    
+
         expected = """[
     {
-        "content": "bar", 
-        "comments": [], 
+        "content": "bar",
+        "comments": [],
         "title": "foo"
-    }, 
+    },
     {
-        "content": "bar2", 
-        "comments": [], 
+        "content": "bar2",
+        "comments": [],
         "title": "foo2"
     }
 ]"""
-    
+
         result = self.client.get('/api/expressive.json',
             HTTP_AUTHORIZATION=self.auth_string).content
 
         self.assertEquals(result, expected)
-        
+
         resp = self.client.post('/api/expressive.json', outgoing, content_type='application/json',
             HTTP_AUTHORIZATION=self.auth_string)
-            
+
         self.assertEquals(resp.status_code, 201)
-        
+
         expected = """[
     {
-        "content": "bar", 
-        "comments": [], 
+        "content": "bar",
+        "comments": [],
         "title": "foo"
-    }, 
+    },
     {
-        "content": "bar2", 
-        "comments": [], 
+        "content": "bar2",
+        "comments": [],
         "title": "foo2"
-    }, 
+    },
     {
-        "content": "test", 
+        "content": "test",
         "comments": [
             {
                 "content": "test1"
-            }, 
+            },
             {
                 "content": "test2"
             }
-        ], 
+        ],
         "title": "test"
     }
 ]"""
-        
-        result = self.client.get('/api/expressive.json', 
+
+        result = self.client.get('/api/expressive.json',
             HTTP_AUTHORIZATION=self.auth_string).content
-            
+
         self.assertEquals(result, expected)
 
     def test_incoming_invalid_json(self):
@@ -277,7 +277,7 @@ class IncomingExpressiveTests(MainTests):
     def test_incoming_yaml(self):
         if not yaml:
             return
-            
+
         expected = """- comments: []
   content: bar
   title: foo
@@ -285,19 +285,19 @@ class IncomingExpressiveTests(MainTests):
   content: bar2
   title: foo2
 """
-          
+
         self.assertEquals(self.client.get('/api/expressive.yaml',
             HTTP_AUTHORIZATION=self.auth_string).content, expected)
 
         outgoing = yaml.dump({ 'title': 'test', 'content': 'test',
                                       'comments': [ { 'content': 'test1' },
                                                     { 'content': 'test2' } ] })
-            
+
         resp = self.client.post('/api/expressive.json', outgoing, content_type='application/x-yaml',
             HTTP_AUTHORIZATION=self.auth_string)
-        
+
         self.assertEquals(resp.status_code, 201)
-        
+
         expected = """- comments: []
   content: bar
   title: foo
@@ -310,7 +310,7 @@ class IncomingExpressiveTests(MainTests):
   content: test
   title: test
 """
-        self.assertEquals(self.client.get('/api/expressive.yaml', 
+        self.assertEquals(self.client.get('/api/expressive.yaml',
             HTTP_AUTHORIZATION=self.auth_string).content, expected)
 
     def test_incoming_invalid_yaml(self):
@@ -340,7 +340,7 @@ class Issue36RegressionTests(MainTests):
         super(self.__class__, self).tearDown()
         self.data.delete()
         signals.entry_request_started.disconnect(self.fetch_request)
-    
+
     def test_simple(self):
         # First try it with POST to see if it works there
         if True:
@@ -394,9 +394,9 @@ class ListFieldsTest(MainTests):
 
     def test_single_item(self):
         expect = '''{
-    "color": "green", 
-    "kind": "fruit", 
-    "id": 1, 
+    "color": "green",
+    "kind": "fruit",
+    "id": 1,
     "variety": "apple"
 }'''
         resp = self.client.get('/api/list_fields/1')
@@ -407,22 +407,22 @@ class ListFieldsTest(MainTests):
     def test_multiple_items(self):
         expect = '''[
     {
-        "id": 1, 
+        "id": 1,
         "variety": "apple"
-    }, 
+    },
     {
-        "id": 2, 
+        "id": 2,
         "variety": "carrot"
-    }, 
+    },
     {
-        "id": 3, 
+        "id": 3,
         "variety": "dog"
     }
 ]'''
         resp = self.client.get('/api/list_fields')
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.content, expect)
-        
+
 class ErrorHandlingTests(MainTests):
     """Test proper handling of errors by Resource"""
 
@@ -445,7 +445,7 @@ class Issue58ModelTests(MainTests):
     it make piston crash with a `TypeError`
     """
     def init_delegate(self):
-        m1 = Issue58Model(read=True,model='t') 
+        m1 = Issue58Model(read=True,model='t')
         m1.save()
         m2 = Issue58Model(read=False,model='f')
         m2.save()
@@ -455,11 +455,11 @@ class Issue58ModelTests(MainTests):
 
         expected = """[
     {
-        "read": true, 
+        "read": true,
         "model": "t"
-    }, 
+    },
     {
-        "read": false, 
+        "read": false,
         "model": "f"
     }
 ]"""
@@ -473,3 +473,243 @@ class Issue58ModelTests(MainTests):
         resp = self.client.post('/api/issue58.json', outgoing, content_type='application/json',
                                 HTTP_AUTHORIZATION=self.auth_string)
         self.assertEquals(resp.status_code, 201)
+
+class PartialGetTests(MainTests):
+    """
+    This tests the partial GET feature
+    """
+    def init_delegate(self):
+        ListFieldsModel(kind='fruit', variety='apple', color='green').save()
+        ListFieldsModel(kind='vegetable', variety='carrot', color='orange').save()
+        ListFieldsModel(kind='animal', variety='dog', color='brown').save()
+
+    def assertRange(self, resp, start, end):
+        self.assertEquals(resp.status_code, 206)
+        self.assertEquals(resp._headers['content-range'][1], "items %d-%d/3" % (start, end))
+
+    ##### Header Tests #####
+    def test_nonitems_range(self):
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='bytes=0-1023')
+        self.assertTrue(resp.status_code != 400)
+
+    def test_malformed_items_range(self):
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=a-b')
+        self.assertEquals(resp.status_code, 400)
+
+    def test_unsatisfiable_range_start_gt_end(self):
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=1-0')
+        self.assertEquals(resp.status_code, 416)
+
+    def test_unsatisfiable_range_start_gt_last(self):
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=3-3')
+        self.assertEquals(resp.status_code, 416)
+
+    def test_0_0(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=0-0')
+        self.assertRange(resp, 0, 0)
+        self.assertEquals(resp.content, expect)
+
+    def test_0_1(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    },
+    {
+        "id": 2,
+        "variety": "carrot"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=0-1')
+        self.assertRange(resp, 0, 1)
+        self.assertEquals(resp.content, expect)
+
+    def test_1_2(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=1-2')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_1_none(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=1-')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+
+    def test_none_1(self):
+        expect = '''[
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=-1')
+        self.assertRange(resp, 2, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_none_2(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=-2')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_none_end_gt_last(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    },
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields', {}, HTTP_RANGE='items=-10000')
+        self.assertRange(resp, 0, 2)
+        self.assertEquals(resp.content, expect)
+
+    ##### Parameter Tests #####
+    def test_unsatisfiable_range_offset_gt_last(self):
+        resp = self.client.get('/api/list_fields?offset=10000&limit=1')
+        self.assertEquals(resp.status_code, 416)
+
+    def test_p_0_1(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=0&limit=1')
+        self.assertRange(resp, 0, 0)
+        self.assertEquals(resp.content, expect)
+
+    def test_p_0_2(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    },
+    {
+        "id": 2,
+        "variety": "carrot"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=0&limit=2')
+        self.assertRange(resp, 0, 1)
+        self.assertEquals(resp.content, expect)
+
+    def test_p_1_2(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=1&limit=2')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_p_1_none(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=1&limit=')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+
+    def test_p_none_1(self):
+        expect = '''[
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=&limit=1')
+        self.assertRange(resp, 2, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_p_none_2(self):
+        expect = '''[
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=&limit=2')
+        self.assertRange(resp, 1, 2)
+        self.assertEquals(resp.content, expect)
+
+    def test_none_limit_gt_last(self):
+        expect = '''[
+    {
+        "id": 1,
+        "variety": "apple"
+    },
+    {
+        "id": 2,
+        "variety": "carrot"
+    },
+    {
+        "id": 3,
+        "variety": "dog"
+    }
+]'''
+        resp = self.client.get('/api/list_fields?offset=&limit=10000')
+        self.assertRange(resp, 0, 2)
+        self.assertEquals(resp.content, expect)
+
