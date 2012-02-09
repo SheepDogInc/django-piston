@@ -1,6 +1,16 @@
 django-piston was originally written by Jesper Noehr, but since
 its release, many people have contributed invaluable feedback and patches:
 
+This fork is being maintained by some members of the SheepDogInc crew:
+
+Honza Pokorny
+David Wolfe
+Adam Thurlow
+Chris Troup
+
+
+Original Authors:
+
 Alberto Donato provided a fix for #26, contributed #35, #37 and #38
 Matthew Marshall provided fixes for #25 and #24
 Pete Karl reported #20

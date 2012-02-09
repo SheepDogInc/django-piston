@@ -2,19 +2,17 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
     import ez_setup
     ez_setup.use_setuptools()
-    from setuptools import setup, find_packages
-    
-import os
+    from setuptools import setup
 
 setup(
     name = "django-piston",
-    version = "0.2.3rc1",
-    url = 'http://bitbucket.org/jespern/django-piston/wiki/Home',
-	download_url = 'http://bitbucket.org/jespern/django-piston/downloads/',
+    version = "0.3-sd",
+    url = 'https://github.com/SheepDogInc/django-piston',
+    download_url = 'https://github.com/SheepDogInc/django-piston',
     license = 'BSD',
     description = "Piston is a Django mini-framework creating APIs.",
     author = 'Jesper Noehr',
