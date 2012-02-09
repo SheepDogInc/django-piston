@@ -226,6 +226,16 @@ class Emitter(object):
                                     ret[model] = _any(inst(), fields)
                             else:
                                 ret[model] = _any(inst, fields)
+                        else:
+                            # You may have a data structure that you're
+                            # pointing to a static method on the handler,
+                            # rather than a foreign key. Do some handler
+                            # introspection to check if the "model" in this
+                            # case is a callable on the handler.
+                            cls_f = getattr(handler or self.handler,
+                                    model, None)
+                            if cls_f:
+                                ret[model] = _any(cls_f(data))
 
                     elif maybe_field in met_fields:
                         # Overriding normal field which has a "resource method"
@@ -234,18 +244,22 @@ class Emitter(object):
                         ret[maybe_field] = _any(met_fields[maybe_field](data))
 
                     else:
-                        maybe = getattr(data, maybe_field, None)
-                        if maybe is not None:
+                        try:
+                            maybe = getattr(data, maybe_field)
+                        except AttributeError:
+                            maybe = None
+                            handler_f = getattr(handler or self.handler, maybe_field, None)
+                            if handler_f:
+                                ret[maybe_field] = _any(handler_f(data))
+                        else:
                             if callable(maybe):
-                                if len(inspect.getargspec(maybe)[0]) <= 1:
+                                argspec = inspect.getargspec(maybe)
+                                args_len = len(argspec[0])
+                                defaults_len = len(argspec[2]) if argspec[2] else 0
+                                if args_len - defaults_len <= 1:
                                     ret[maybe_field] = _any(maybe())
                             else:
                                 ret[maybe_field] = _any(maybe)
-                        else:
-                            handler_f = getattr(handler or self.handler, maybe_field, None)
-
-                            if handler_f:
-                                ret[maybe_field] = _any(handler_f(data))
 
             else:
                 #neither handler nor fields were given

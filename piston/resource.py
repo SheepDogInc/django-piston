@@ -201,6 +201,9 @@ class Resource(object):
 
             if hasattr(handler, 'list_fields') and isinstance(result, (list, tuple, QuerySet)):
                 fields = handler.list_fields
+            if callable(fields):
+                fields = fields(request, *args, **kwargs)
+
         except ValueError:
             result = rc.BAD_REQUEST
             result.content = "Invalid output format specified '%s'." % em_format
