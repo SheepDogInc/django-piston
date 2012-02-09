@@ -23,6 +23,36 @@ class NoAuthentication(object):
     def is_authenticated(self, request):
         return True
 
+class MultiAuthentication(object):
+    """
+    Authenticated Django-Piston against multiple types of authentication
+    """
+
+    def __init__(self, auth_types):
+        """ Takes a list of authenication objects to try against, the default
+        authentication type to try is the first in the list. """
+        self.auth_types = auth_types
+        self.selected_auth = auth_types[0]
+
+    def is_authenticated(self, request):
+        """
+        Try each authentication type in order and use the first that succeeds
+        """
+        authenticated = False
+        for auth in self.auth_types:
+            authenticated = auth.is_authenticated(request)
+            if authenticated:
+                selected_auth = auth
+                break
+        return authenticated
+
+    def challenge(self):
+        """
+        Return the challenge for whatever the selected auth type is (or the
+        default auth type which is the first in the list)"""
+        return self.selected_auth.challenge()
+
+
 class HttpBasicAuthentication(object):
     """
     Basic HTTP authenticater. Synopsis:
