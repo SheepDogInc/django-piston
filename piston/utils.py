@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.core.cache import cache
 from django import get_version as django_version
 from django.core.mail import send_mail, mail_admins
+from django.core.urlresolvers import resolve
+from django.http import Http404
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.template import loader, TemplateDoesNotExist
@@ -72,6 +74,17 @@ class rc_factory(object):
         return HttpResponseWrapper(r, content_type='text/plain', status=c)
 
 rc = rc_factory()
+
+def direct_to_string (request, url):
+    """
+    Render the view specified by the url directly to the string using request.
+    Useful for pre-populating JavaScript with data using the same API.
+    """
+    r = resolve(url)
+    response = r.func(request, *r.args, **r.kwargs)
+    if response.status_code != 200:
+        raise Http404
+    return response.content
 
 class FormValidationError(Exception):
     def __init__(self, form):
