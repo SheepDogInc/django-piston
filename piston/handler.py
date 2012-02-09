@@ -52,9 +52,11 @@ class BaseHandler(object):
     anonymous = is_anonymous = False
     exclude = ( 'id', )
     fields =  ( )
+    model = None
 
     def __init__(self):
-        self.pkfield = getattr(self,'pkfield',self.model._meta.pk.name)
+        self.pkfield = getattr(self, 'pkfield', self.model._meta.pk.name if
+                self.model else None)
 
     def flatten_dict(self, dct):
         return dict([ (str(k), dct.get(k)) for k in dct.keys() ])
