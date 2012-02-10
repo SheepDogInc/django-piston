@@ -14,3 +14,6 @@ github, We're going to do our best to keep this up to date with community
 contributions, as well as our own.
 
 The original project is hosted here: https://bitbucket.org/jespern/django-piston/wiki/Home
+
+Latest documentation is `here
+<http://django-piston-sheepdog.readthedocs.org/en/latest/index.html>`_.
