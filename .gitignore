@@ -2,6 +2,7 @@
 *.egg
 *.pyc
 build
+_build
 dist
 django_piston.egg-info
 bin
