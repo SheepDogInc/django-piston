@@ -7,7 +7,7 @@ django-piston
 =============
 
 This is a fork of the django-piston project that we're taking under our wing
-here at SheepDogInc. After seeing ~160 forks on bitbucket, and ~20 forks on
+here at `SheepDogInc`_. After seeing ~160 forks on bitbucket, and ~20 forks on
 github, We're going to do our best to keep this up to date with community
 contributions, as well as our own.
 
@@ -42,3 +42,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. _SheepDogInc: http://sheepdoginc.ca
