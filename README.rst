@@ -4,7 +4,7 @@ django-piston
 :Info: Piston is a Django mini-framework for creating APIs
 :Author: Jesper Noehr (jesper@noehr.org)
 :Collaborators: SheepDogInc (http://sheepdoginc.ca)
-:Version: 0.3.1
+:Version: 0.3.1 - released 2012-02-11
 
 What is this?
 =============
