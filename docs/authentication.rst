@@ -1,11 +1,39 @@
 Authentication
 ~~~~~~~~~~~~~~
 
-Piston supports pluggable authentication through a simple interface.
-Resources can be initialized to use any authentication handler that
-implements the interface. The default is to use the NoAuthentication
-handler. Adding to the Blogpost example, you could require Basic
-Authentication as follows:
+Piston comes with 4 built-in authentication mechanisms:
+
+ - ``piston.authentication.NoAuthentication``
+ - ``piston.authentication.HttpBasicAuthentication``
+ - ``piston.authentication.OAuthAuthentication``
+ - ``piston.authentication.DjangoAuthentication``
+
+plus a bonus ``piston.authentication.MultiAuthentication`` class to allow you
+to register multiple Auth mechanisms with a single instance of a handler.
+
+The default Authentication mechanism for a handler is ``NoAuthentication``
+which simply returns true on ``is_authenticated``.
+
+HttpBasicAuthentication
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``piston.authentication.HttpBasicAuthentication`` Authentication handler
+allows you to use simple HTTP Authentication with your API.
+
+.. note::
+
+    Using ``piston.authentication.HttpBasicAuthentication``
+    with apache and mod\_wsgi requires you to add the
+    ``WSGIPassAuthorization On`` directive to the server or vhost config,
+    otherwise django-piston cannot read the authentication data from
+    ``HTTP_AUTHORIZATION`` in ``request.META``. See:
+    `Configuration Directives <http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization>`_.
+
+Example
+-------
+
+Adding to the Blogpost example, you could require Basic Authentication as 
+follows:
 
 .. sourcecode:: python
 
@@ -21,21 +49,30 @@ Authentication as follows:
        url(r'^blogposts/', blogpost_handler),
     )
 
-Piston comes with 2 built-in authentication mechanisms, namely
-``piston.authentication.HttpBasicAuthentication`` and
-``piston.authentication.OAuthAuthentication``. The Basic auth handler is
-very simple, and you should use this for reference if you want to roll
+DjangoAuthentication
+^^^^^^^^^^^^^^^^^^^^
+
+<< FILL ME IN >>
+
+OAuthAuthentication
+^^^^^^^^^^^^^^^^^^^
+
+OAuth is the preferred means of authorization, because it distinguishes
+between "consumers", i.e. the approved application on your end which is
+using the API. Piston knows and respects this, and makes good use of it,
+for example when you use the @throttle decorator, it will limit on a
+per-consumer basis, keeping services operational even if one service has
+been throttled.
+
+Build Your Own
+^^^^^^^^^^^^^^
+
+Piston supports pluggable authentication through a simple interface.
+Resources can be initialized to use any authentication handler that
+implements the interface. 
+
+The Basic auth handler is very simple, and you should use this for reference if you want to roll
 your own.
-
-
-.. note::
-
-    Using ``piston.authentication.HttpBasicAuthentication``
-    with apache and mod\_wsgi requires you to add the
-    ``WSGIPassAuthorization On`` directive to the server or vhost config,
-    otherwise django-piston cannot read the authentication data from
-    ``HTTP_AUTHORIZATION`` in ``request.META``. See:
-    `Configuration Directives <http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization>`_.
 
 An authentication handler is a class, which must have 2 methods:
 ``is_authenticated`` and ``challenge``.
@@ -64,14 +101,10 @@ For anonymous handlers, there is a special class, ``NoAuthentication``
 in ``piston.authentication`` that always returns True for
 ``is_authenticated``.
 
-OAuth
-^^^^^
 
-OAuth is the preferred means of authorization, because it distinguishes
-between "consumers", i.e. the approved application on your end which is
-using the API. Piston knows and respects this, and makes good use of it,
-for example when you use the @throttle decorator, it will limit on a
-per-consumer basis, keeping services operational even if one service has
-been throttled.
+
+
+
+
 
 

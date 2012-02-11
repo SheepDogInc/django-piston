@@ -1,8 +1,13 @@
 Helpers, utils & @decorators
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For your convenience, there’s a set of helpers and utilities you can
-use. One of those is ``rc`` from ``piston.utils``. It contains a set of
+For your convenience, there's a set of helpers and utilities you can use to
+help build out your API.
+
+piston.utils.rc
+^^^^^^^^^^^^^^^
+
+One of those is ``rc`` from ``piston.utils``. It contains a set of
 standard returns that you can return from your actions to indicate a
 certain situation to the client.
 
@@ -47,4 +52,23 @@ return a new instance rather than a singleton.
 | rc.THROTTLED          | 503 Throttled                      | Request was throttled.                  |
 +-----------------------+------------------------------------+-----------------------------------------+
 
+piston.utils.direct_to_string
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The ``direct_to_string`` method allows you to pass an API url to the API
+internally and receive the ``HttpResponse`` content that the API would render.
+It takes care of url reversing for you as well.
+
+This is especially useful for bootstrapping views in your app to save on server
+round-trips for client / JS heavy apps.
+
+.. sourcecode:: python
+
+    from piston.utils import direct_to_string
+
+    def my_view(request):
+       # ...
+       api_preload = direct_to_string(request, '/api/v1/foos/')
+       return render_to_response('template.html', {
+            "bootstrapped_data": json_response
+            })
