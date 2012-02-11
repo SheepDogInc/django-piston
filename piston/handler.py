@@ -21,11 +21,18 @@ class HandlerMetaClass(type):
                 if model == m and anon == a:
                     return k
 
-        if hasattr(new_cls, 'model'):
+        if hasattr(new_cls, 'model') and getattr(new_cls, 'model') is not None:
             handler = already_registered(new_cls.model, new_cls.is_anonymous)
             if handler:
                 if not getattr(settings, 'PISTON_IGNORE_DUPE_MODELS', False):
-                    warnings.warn("Registering handler %s. Handler %s already registered for model %s, you may experience inconsistent results." % (name, handler.__name__, new_cls.model.__name__))
+                    if new_cls.model:
+                        model_name = new_cls.model.__name__
+                    else:
+                        model_name = "No Model"
+                    warnings.warn("""Registering handler %s. Handler %s already
+                            registered for model %s, you may experience
+                            inconsistent results.""" % (name, handler.__name__,
+                                model_name))
 
             typemapper[new_cls] = (new_cls.model, new_cls.is_anonymous)
         else:
@@ -55,8 +62,11 @@ class BaseHandler(object):
     model = None
 
     def __init__(self):
-        self.pkfield = getattr(self, 'pkfield', self.model._meta.pk.name if
-                self.model else None)
+        if self.model and hasattr(self.model, '_meta'):
+            default_pkfield = self.model._meta.pk.name
+        else:
+            default_pkfield = None
+        self.pkfield = getattr(self, 'pkfield', default_pkfield)
 
     def flatten_dict(self, dct):
         return dict([ (str(k), dct.get(k)) for k in dct.keys() ])
