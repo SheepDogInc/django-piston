@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from piston.handler import BaseHandler
 from piston.utils import rc, validate
 
-from piston.tests.testapp.models import TestModel, ExpressiveTestModel, Comment, InheritedModel, PlainOldObject, Issue58Model, ListFieldsModel
+from piston.tests.testapp.models import TestModel, IntegerTestModel, ExpressiveTestModel, Comment, InheritedModel, PlainOldObject, Issue58Model, ListFieldsModel
 from piston.tests.testapp.forms import EchoForm
 from piston.tests.testapp import signals
 
@@ -51,6 +51,16 @@ class ExpressiveHandler(BaseHandler):
         else:
             super(ExpressiveHandler, self).create(request)
             
+class NullZeroIntegerHandler(BaseHandler):
+    """
+    Handler should return all keys of the object, regardless of its value.
+    """
+    fields = ('id', 'name', 'offices_count')
+    model = IntegerTestModel
+
+    def read(self, request):
+        return IntegerTestModel.objects.all()
+
 class AbstractHandler(BaseHandler):
     fields = ('id', 'some_other', 'some_field')
     model = InheritedModel

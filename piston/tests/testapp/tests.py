@@ -15,7 +15,8 @@ except ImportError:
 
 import base64
 
-from piston.tests.testapp.models import TestModel, ExpressiveTestModel, InheritedModel, Issue58Model, ListFieldsModel
+from piston.tests.testapp.models import TestModel, ExpressiveTestModel, \
+    InheritedModel, IntegerTestModel, Issue58Model, ListFieldsModel
 from piston.tests.testapp import signals
 
 class MainTests(TestCase):
@@ -193,6 +194,33 @@ class AbstractBaseClassTests(MainTests):
             expected = be_(id_)
 
             self.assertEquals(json.loads(result), expected)
+
+class EnsureNullZeroIntegersTests(MainTests):
+    """
+    Regressing behaviour shows that properties whom return Falsey values get
+    dropped off the JSON structure.
+
+    https://github.com/SheepDogInc/django-piston/issues/8
+    """
+
+    def init_delegate(self):
+        m1 = IntegerTestModel(name="with all fields", offices_count=1)
+        m1.save()
+        m2 = IntegerTestModel(name="missing_offices")
+        m2.save()
+        m3 = IntegerTestModel(name="zero_offices", offices_count=0)
+        m3.save()
+
+    def test_field_presence(self):
+        result = self.client.get('/api/nullzero.json',
+                HTTP_AUTHORIZATION=self.auth_string).content
+
+        expected = [
+            {"id": 1, "name": "with all fields", "offices_count": 1},
+            {"id": 2, "name": "missing_offices", "offices_count": None},
+            {"id": 3, "name": "zero_offices", "offices_count": 0}
+        ]
+        self.assertEquals(json.loads(result), expected)
 
 class IncomingExpressiveTests(MainTests):
     def init_delegate(self):

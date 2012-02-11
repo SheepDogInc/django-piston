@@ -8,7 +8,11 @@ class ExpressiveTestModel(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     never_shown = models.TextField()
-    
+
+class IntegerTestModel(models.Model):
+    name = models.CharField(max_length=255)
+    offices_count = models.IntegerField(blank=True, null=True)
+
 class Comment(models.Model):
     parent = models.ForeignKey(ExpressiveTestModel, related_name='comments')
     content = models.TextField()
