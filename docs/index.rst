@@ -34,6 +34,7 @@ Contents:
    receiving
    streaming
    configuration
+   changelog
 
 Indices and tables
 ==================
