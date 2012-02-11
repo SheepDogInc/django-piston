@@ -4,10 +4,10 @@ Change History
 0.3.1
 ^^^^^
 
-:Release Date:        2012-02-11 8:00PM AST
-:by:                  SheepDogInc.
-:GitHub Contributors: thurloat, honza, mkaluza, michaelblume, minichate,
-                      ivangonekrazy, kennthreitz
+:Release Date: 2012-02-11 8:00PM AST
+:by:           SheepDogInc.
+:Contributors: thurloat, honza, mkaluza, michaelblume, minichate,
+               ivangonekrazy, kennthreitz
 
 Important Notes
 ---------------
