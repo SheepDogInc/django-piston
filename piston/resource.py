@@ -14,7 +14,7 @@ from piston.handler import typemapper
 from piston.doc import HandlerMethod
 from piston.authentication import NoAuthentication
 from piston.utils import coerce_put_post, FormValidationError, HttpStatusCode
-from piston.utils import rc, format_error, MimerDataException
+from piston.utils import rc, format_error, MimerDataException, BadRangeException
 from piston.utils import Mimer
 
 CHALLENGE = object()
