@@ -52,8 +52,10 @@ return a new instance rather than a singleton.
 | rc.THROTTLED          | 503 Throttled                      | Request was throttled.                  |
 +-----------------------+------------------------------------+-----------------------------------------+
 
-piston.utils.direct_to_string
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _piston-utils-direct-to-string:
+
+direct_to_string
+^^^^^^^^^^^^^^^^
 
 The ``direct_to_string`` method allows you to pass an API url to the API
 internally and receive the ``HttpResponse`` content that the API would render.

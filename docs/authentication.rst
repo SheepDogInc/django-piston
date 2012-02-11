@@ -29,8 +29,7 @@ allows you to use simple HTTP Authentication with your API.
     ``HTTP_AUTHORIZATION`` in ``request.META``. See:
     `Configuration Directives <http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization>`_.
 
-Example
--------
+**Example**
 
 Adding to the Blogpost example, you could require Basic Authentication as 
 follows:
@@ -49,10 +48,14 @@ follows:
        url(r'^blogposts/', blogpost_handler),
     )
 
+.. _piston-authentication-DjangoAuthentication:
+
 DjangoAuthentication
 ^^^^^^^^^^^^^^^^^^^^
 
-<< FILL ME IN >>
+A very handy class to use your API from pages that Django rendered, 
+``DjangoAuthentication`` allows you to use a user's session cookie to
+Authenticate to the API.
 
 OAuthAuthentication
 ^^^^^^^^^^^^^^^^^^^
@@ -63,6 +66,36 @@ using the API. Piston knows and respects this, and makes good use of it,
 for example when you use the @throttle decorator, it will limit on a
 per-consumer basis, keeping services operational even if one service has
 been throttled.
+
+.. _piston-authentication-MultiAuthentication:
+
+MultiAuthentication
+^^^^^^^^^^^^^^^^^^^
+
+``MultiAuthentication`` allows you to register multiple authentication classes
+for the same handler.
+
+On each call, it will try each auth method in order, and try to authenticate in
+before failing.
+
+**Example**
+
+This example shows registering all 3 Auth methods to a single handler inside
+the url configuration in ``urls.py``.
+
+.. sourcecode:: python
+
+    dj_auth = DjangoAuthentication()
+    basic_auth = HttpBasicAuthentication(realm="BasicAuth")
+    o_auth = OAuthAuthentication(realm="OAuth")
+
+    # Register all 3 Auth methods for the API.
+    auth = MultiAuthentication([dj_auth, basic_auth, o_auth])
+    ad = { 'authentication': auth }
+
+    # User Handler
+    user_handler = APIResource(UserHandler, \*\*ad)
+        
 
 Build Your Own
 ^^^^^^^^^^^^^^

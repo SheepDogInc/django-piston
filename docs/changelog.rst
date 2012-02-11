@@ -4,7 +4,7 @@ Change History
 0.3.1
 ^^^^^
 
-:Release Date:        2012-02-10 8:00PM AST
+:Release Date:        2012-02-11 8:00PM AST
 :by:                  SheepDogInc.
 :GitHub Contributors: thurloat, honza, mkaluza, michaelblume, minichate,
                       ivangonekrazy, kennthreitz
@@ -22,18 +22,22 @@ can run the tests with ``$ python setup.py test``.
 Features
 --------
 
-  - Add utility shortcut ``piston.utils.render_to_string``.
-
+  - Add utility shortcut ``piston.utils.direct_to_string``.
+    
+    - Documentation for :ref:`piston-utils-direct-to-string`
     
   - Add ``MultiAuthentication`` auth option to allow support for multiple Auth
     mechanisms.
-    
-    Original thanks to the `Staerr Gist`_
+
+    - Documentation for :ref:`piston-authentication-MultiAuthentication`
+    - Original thanks to the `Staerr Gist`_
 
   - Add ``DjangoAuthentication`` auth option for using the API from your own
     client.
     
-    Original thanks to Yann Malet: `Yann Malet Blog Post`_
+    - Documentation for :ref:`piston-authentication-DjangoAuthentication`
+    - Original thanks to Yann Malet: `Yann Malet Blog Post`_
+
   - Allow Mimer and translate_mime to be overriden in subclasses of Resource
   - Add Pagination (docs to come, tests passing.)
 
