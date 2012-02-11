@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name = "django-piston",
-    version = "0.3-sd",
+    version = "0.3.1",
     url = 'https://github.com/SheepDogInc/django-piston',
     download_url = 'https://github.com/SheepDogInc/django-piston',
     license = 'BSD',
@@ -26,5 +26,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
-    ]
+    ],
+    test_suite='piston.tests.runtests.runtests'
 )
