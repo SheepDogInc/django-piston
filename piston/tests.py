@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from django.utils import simplejson
 
 # Piston imports
-from piston.test import TestCase
+from piston.testutils import TestCase
 from piston.models import Consumer
 from piston.handler import BaseHandler
 from piston.utils import rc
@@ -29,7 +29,7 @@ class ConsumerTest(TestCase):
             loader.render_to_string(template, {
                 'consumer': self.consumer,
                 'user': self.consumer.user
-            })
+                })
             return True
         except TemplateDoesNotExist:
             """
@@ -79,32 +79,32 @@ class CustomResponseWithStatusCodeTest(TestCase):
      of data. This data will be formatted as json.
      """
 
-     def test_reponse_with_data_and_status_code(self):
-         response_data = dict(complex_response=dict(something='good',
-             something_else='great'))
+def test_reponse_with_data_and_status_code(self):
+    response_data = dict(complex_response=dict(something='good',
+        something_else='great'))
 
-        class MyHandler(BaseHandler):
-            """
-            Handler which returns a response w/ both data and a status code (201)
-            """
-            allowed_methods = ('POST', )
+    class MyHandler(BaseHandler):
+        """
+        Handler which returns a response w/ both data and a status code (201)
+        """
+        allowed_methods = ('POST', )
 
-            def create(self, request):
-                resp = rc.CREATED
-                resp.content = response_data
-                return resp
+        def create(self, request):
+            resp = rc.CREATED
+            resp.content = response_data
+            return resp
 
-        resource = Resource(MyHandler)
-        request = HttpRequest()
-        request.method = 'POST'
-        response = resource(request, emitter_format='json')
+    resource = Resource(MyHandler)
+    request = HttpRequest()
+    request.method = 'POST'
+    response = resource(request, emitter_format='json')
 
-        self.assertEquals(201, response.status_code)
-        self.assertTrue(response._is_string, "Expected response content to be a string")
+    self.assertEquals(201, response.status_code)
+    self.assertTrue(response._is_string, "Expected response content to be a string")
 
-         # compare the original data dict with the json response
-         # converted to a dict
-         self.assertEquals(response_data, simplejson.loads(response.content))
+    # compare the original data dict with the json response
+    # converted to a dict
+    self.assertEquals(response_data, simplejson.loads(response.content))
 
 
 class ErrorHandlerTest(TestCase):
@@ -138,7 +138,7 @@ class ErrorHandlerTest(TestCase):
                         name=error.name,
                         message="Get out of here and dont come back",
                         reason=error.reason
-                    ))
+                        ))
 
                     return response
 
@@ -150,7 +150,7 @@ class ErrorHandlerTest(TestCase):
         request.method = 'GET'
         response = resource(request, emitter_format='json')
 
-        self.assertEquals(401, response.status_code)
+        self.assertEquals(403, response.status_code)
 
         # verify the content we got back can be converted back to json
         # and examine the dictionary keys all exist as expected
@@ -174,11 +174,11 @@ class ErrorHandlerTest(TestCase):
         response = Resource(MyHandler)(request)
 
         self.assertTrue(isinstance(response, HttpResponse), "Expected a response, not: %s"
-            % response)
+                % response)
 
 
-    def test_other_error(self):
-        """
+        def test_other_error(self):
+            """
         Verify that other exceptions thrown from a handler method result in a valid
         HttpResponse object being returned from the error_handler method
         """
@@ -195,4 +195,4 @@ class ErrorHandlerTest(TestCase):
         response = resource(request)
 
         self.assertTrue(isinstance(response, HttpResponse), "Expected a response, not: %s"
-            % response)
+                % response)

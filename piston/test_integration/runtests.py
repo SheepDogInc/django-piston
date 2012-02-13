@@ -15,12 +15,12 @@ if not settings.configured:
             'django.contrib.sessions',
             'django.contrib.sites',
             'piston',
-            'piston.tests.testapp',
+            'piston.test_integration.testapp',
             ],
         TEMPLATE_DIRS=[
             os.path.join(os.path.dirname(__file__), 'templates'),
             ],
-        ROOT_URLCONF='piston.tests.urls',
+        ROOT_URLCONF='piston.test_integration.urls',
         MIDDLEWARE_CLASSES=[
             'piston.middleware.ConditionalMiddlewareCompatProxy',
             'django.contrib.sessions.middleware.SessionMiddleware',
@@ -34,7 +34,7 @@ from django.test.simple import run_tests
 
 def runtests(*test_args):
     if not test_args:
-        test_args = ['piston', 'testapp']
+        test_args = ['testapp', 'piston']
     parent = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "..",

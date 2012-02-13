@@ -3,9 +3,9 @@ from django.core.paginator import Paginator
 from piston.handler import BaseHandler
 from piston.utils import rc, validate
 
-from piston.tests.testapp.models import TestModel, IntegerTestModel, ExpressiveTestModel, Comment, InheritedModel, PlainOldObject, Issue58Model, ListFieldsModel
-from piston.tests.testapp.forms import EchoForm
-from piston.tests.testapp import signals
+from .models import TestModel, IntegerTestModel, ExpressiveTestModel, Comment, InheritedModel, PlainOldObject, Issue58Model, ListFieldsModel
+from .forms import EchoForm
+from . import signals
 
 class EntryHandler(BaseHandler):
     model = TestModel

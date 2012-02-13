@@ -27,5 +27,5 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
     ],
-    test_suite='piston.tests.runtests.runtests'
+    test_suite='piston.test_integration.runtests.runtests'
 )

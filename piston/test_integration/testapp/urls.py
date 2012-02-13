@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from piston.resource import Resource
 from piston.authentication import HttpBasicAuthentication, HttpBasicSimple
 
-from piston.tests.testapp.handlers import EntryHandler, ExpressiveHandler, \
+from .handlers import EntryHandler, ExpressiveHandler, \
     AbstractHandler, NullZeroIntegerHandler, EchoHandler, \
     PlainOldObjectHandler, Issue58Handler, ListFieldsHandler
 

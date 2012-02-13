@@ -15,9 +15,9 @@ except ImportError:
 
 import base64
 
-from piston.tests.testapp.models import TestModel, ExpressiveTestModel, \
+from .models import TestModel, ExpressiveTestModel, \
     InheritedModel, IntegerTestModel, Issue58Model, ListFieldsModel
-from piston.tests.testapp import signals
+from . import signals
 
 class MainTests(TestCase):
     def setUp(self):
