@@ -19,7 +19,7 @@ except NameError:
                 return True
         return False
 
-from django.db.models.query import QuerySet
+from django.db.models.query import QuerySet, RawQuerySet
 from django.db.models import Model, permalink
 from django.utils import simplejson
 from django.utils.xmlutils import SimplerXMLGenerator
@@ -102,7 +102,7 @@ class Emitter(object):
             """
             ret = None
 
-            if isinstance(thing, QuerySet):
+            if isinstance(thing, (QuerySet, RawQuerySet)):
                 ret = _qs(thing, fields)
             elif isinstance(thing, (tuple, list, set)):
                 ret = _list(thing, fields)
